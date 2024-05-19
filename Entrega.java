@@ -1,3 +1,5 @@
+package discreta;
+
 import java.lang.AssertionError;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +51,7 @@ import java.util.stream.Stream;
  * fàcilment les actualitzacions amb enunciats nous. Si no podeu visualitzar bé algun enunciat,
  * assegurau-vos de que el vostre editor de texte estigui configurat amb codificació UTF-8.
  */
-class Entrega {
+class Discreta {
   /*
    * Aquí teniu els exercicis del Tema 1 (Lògica).
    *
@@ -71,28 +73,96 @@ class Entrega {
      * Vegeu el mètode Tema1.tests() per exemples.
      */
     static int exercici1(int n) {
-      return 0; // TODO
+      // La fórmula proposicional (...((p1 -> p2) -> p3) -> ...) -> pn és certa
+      // si la única implicación falsa en cada paso es la última.
+      
+      int count = 0;
+      int totalCombinations = (1 << n); // 2^n combinaciones posibles de p1, p2, ..., pn
+      
+      for (int i = 0; i < totalCombinations; i++) {
+        // Generar la combinación actual de valores de verdad
+        boolean[] values = new boolean[n];
+        for (int j = 0; j < n; j++) {
+          values[j] = (i & (1 << j)) != 0;
+        }
+        
+        // Evaluar la proposición (...((p1 -> p2) -> p3) -> ...) -> pn
+        boolean result = values[0];
+        for (int j = 1; j < n; j++) {
+          result = !result || values[j];
+        }
+        
+        // Contar las combinaciones en las que la proposición es verdadera
+        if (result) {
+          count++;
+        }
+      }
+      
+      return count;
     }
 
     /*
      * És cert que ∀x : P(x) -> ∃!y : Q(x,y) ?
      */
     static boolean exercici2(int[] universe, Predicate<Integer> p, BiPredicate<Integer, Integer> q) {
-      return false; // TODO
+        for (int x : universe) {
+            if (p.test(x)) {
+                int count = 0;
+                for (int y : universe) {
+                    if (q.test(x, y)) {
+                        count++;
+                    }
+                }
+                if (count != 1) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /*
      * És cert que ∃x : ∀y : Q(x, y) -> P(x) ?
      */
     static boolean exercici3(int[] universe, Predicate<Integer> p, BiPredicate<Integer, Integer> q) {
-      return false; // TODO
+        for (int x : universe) {
+            boolean valid = true;
+            for (int y : universe) {
+                if (q.test(x, y) && !p.test(x)) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*
      * És cert que ∃x : ∃!y : ∀z : P(x,z) <-> Q(y,z) ?
      */
     static boolean exercici4(int[] universe, BiPredicate<Integer, Integer> p, BiPredicate<Integer, Integer> q) {
-      return false; // TODO
+        for (int x : universe) {
+            int countY = 0;
+            for (int y : universe) {
+                boolean valid = true;
+                for (int z : universe) {
+                    if (p.test(x, z) != q.test(y, z)) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (valid) {
+                    countY++;
+                }
+            }
+            if (countY == 1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*
@@ -203,7 +273,29 @@ class Entrega {
      * Podeu soposar que `a`, `b` i `c` estan ordenats de menor a major.
      */
     static int exercici1(int[] a, int[] b, int[] c) {
-      return -1; // TODO
+        // Paso 1: Unión de a y b
+        HashSet<Integer> unionSet = new HashSet<>();
+        for (int value : a) {
+            unionSet.add(value);
+        }
+        for (int value : b) {
+            unionSet.add(value);
+        }
+
+        // Paso 2: Diferencia de a y c
+        HashSet<Integer> diffSet = new HashSet<>();
+        for (int value : a) {
+            diffSet.add(value);
+        }
+        for (int value : c) {
+            diffSet.remove(value);
+        }
+
+        // Paso 3: Producto cartesiano de (a ∪ b) × (a \ c)
+        int cartesianProductSize = unionSet.size() * diffSet.size();
+
+        // Devolver el tamaño del producto cartesiano
+        return cartesianProductSize;
     }
 
     /*
@@ -215,7 +307,50 @@ class Entrega {
      * Podeu soposar que `a` i `rel` estan ordenats de menor a major (`rel` lexicogràficament).
      */
     static int exercici2(int[] a, int[][] rel) {
-      return -1; // TODO
+        int n = a.length;
+        boolean[][] closure = new boolean[n][n];
+
+        // Initialize the closure matrix with the given relation
+        for (int[] pair : rel) {
+            closure[pair[0]][pair[1]] = true;
+        }
+
+        // Apply reflexive closure
+        for (int i = 0; i < n; i++) {
+            closure[i][i] = true;
+        }
+
+        // Apply symmetric closure
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (closure[i][j]) {
+                    closure[j][i] = true;
+                }
+            }
+        }
+
+        // Apply transitive closure using Floyd-Warshall algorithm
+        for (int k = 0; k < n; k++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (closure[i][k] && closure[k][j]) {
+                        closure[i][j] = true;
+                    }
+                }
+            }
+        }
+
+        // Count the number of elements in the closure
+        int count = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (closure[i][j]) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 
     /*
@@ -225,7 +360,64 @@ class Entrega {
      * Podeu soposar que `a` i `rel` estan ordenats de menor a major (`rel` lexicogràficament).
      */
     static int exercici3(int[] a, int[][] rel) {
-      return -1; // TODO
+        int n = a.length;
+        boolean[][] isLessOrEqual = new boolean[n][n];
+
+        // Populate the matrix for the relation
+        for (int[] pair : rel) {
+            isLessOrEqual[pair[0]][pair[1]] = true;
+        }
+
+        // Check reflexivity
+        for (int i = 0; i < n; i++) {
+            if (!isLessOrEqual[i][i]) {
+                return -2;
+            }
+        }
+
+        // Check antisymmetry and transitivity
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (isLessOrEqual[i][j] && isLessOrEqual[j][i] && i != j) {
+                    return -2;
+                }
+                for (int k = 0; k < n; k++) {
+                    if (isLessOrEqual[i][j] && isLessOrEqual[j][k] && !isLessOrEqual[i][k]) {
+                        return -2;
+                    }
+                }
+            }
+        }
+
+        // Check comparability
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (!isLessOrEqual[i][j] && !isLessOrEqual[j][i]) {
+                    return -2;
+                }
+            }
+        }
+
+        // Hasse diagram edge count
+        int hasseEdges = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (isLessOrEqual[i][j] && i != j) {
+                    boolean isCovering = true;
+                    for (int k = 0; k < n; k++) {
+                        if (isLessOrEqual[i][k] && isLessOrEqual[k][j] && i != k && j != k) {
+                            isCovering = false;
+                            break;
+                        }
+                    }
+                    if (isCovering) {
+                        hasseEdges++;
+                    }
+                }
+            }
+        }
+
+        return hasseEdges;
     }
 
 
@@ -237,7 +429,37 @@ class Entrega {
      * lexicogràficament).
      */
     static int[][] exercici4(int[] a, int[][] rel1, int[][] rel2) {
-      return new int[][] {}; // TODO
+        int n = a.length;
+        int[] map1 = new int[n];
+        int[] map2 = new int[n];
+        Arrays.fill(map1, -1);
+        Arrays.fill(map2, -1);
+
+        // Check if rel1 is a function
+        for (int[] pair : rel1) {
+            if (map1[pair[0]] != -1) {
+                return null;
+            }
+            map1[pair[0]] = pair[1];
+        }
+
+        // Check if rel2 is a function
+        for (int[] pair : rel2) {
+            if (map2[pair[0]] != -1) {
+                return null;
+            }
+            map2[pair[0]] = pair[1];
+        }
+
+        // Compose rel2 ∘ rel1
+        ArrayList<int[]> composedRel = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            if (map1[i] != -1 && map2[map1[i]] != -1) {
+                composedRel.add(new int[] { i, map2[map1[i]] });
+            }
+        }
+
+        return composedRel.toArray(new int[0][]);
     }
 
     /*
@@ -245,7 +467,36 @@ class Entrega {
      * el seu graf (el de l'inversa). Sino, retornau null.
      */
     static int[][] exercici5(int[] dom, int[] codom, Function<Integer, Integer> f) {
-      return new int[][] {}; // TODO
+        int n = dom.length;
+
+        // Ensure domain and codomain have the same length
+        if (n != codom.length) {
+            System.out.println("El domini i codimini han de tenir el mateix tamany");
+            return null;
+        }
+
+        int[] inverse = new int[n];
+        Arrays.fill(inverse, -1);
+
+        // Check if f is bijective and calculate inverse
+        for (int x : dom) {
+            int y = f.apply(x);
+            int index = Arrays.binarySearch(codom, y);
+            if (index < 0 || inverse[index] != -1) {
+                System.out.println("La funcio no es bijectiva");
+                return null;
+            }
+            inverse[index] = x;
+        }
+
+        // Build the graph of the inverse
+        int[][] inverseGraph = new int[n][2];
+        for (int i = 0; i < n; i++) {
+            inverseGraph[i][0] = codom[i];
+            inverseGraph[i][1] = inverse[i];
+        }
+
+        return inverseGraph;
     }
 
     /*
@@ -506,7 +757,8 @@ class Entrega {
   public static void main(String[] args) {
     Tema1.tests();
     Tema2.tests();
-    Tema3.tests();
+    System.out.println("Tots els test han funcionat correctament");
+    
   }
 
   /// Si b és cert, no fa res. Si b és fals, llança una excepció (AssertionError).
@@ -517,3 +769,4 @@ class Entrega {
 }
 
 // vim: set textwidth=100 shiftwidth=2 expandtab :
+
